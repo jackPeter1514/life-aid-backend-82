@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
@@ -54,7 +55,22 @@ const userSchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: true
+    default: false // Changed to false - user becomes active only after OTP verification
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  otp: {
+    type: String
+  },
+  otpExpires: {
+    type: Date
+  },
+  otpType: {
+    type: String,
+    enum: ['registration', 'password_reset'],
+    default: 'registration'
   },
   lastLogin: {
     type: Date
@@ -124,6 +140,34 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 // Check if user has permission
 userSchema.methods.hasPermission = function(permission) {
   return this.permissions.includes(permission);
+};
+
+// Generate OTP
+userSchema.methods.generateOTP = function() {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  this.otp = otp;
+  this.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+  return otp;
+};
+
+// Verify OTP
+userSchema.methods.verifyOTP = function(candidateOTP) {
+  if (!this.otp || !this.otpExpires) {
+    return false;
+  }
+  
+  if (new Date() > this.otpExpires) {
+    return false; // OTP expired
+  }
+  
+  return this.otp === candidateOTP;
+};
+
+// Clear OTP
+userSchema.methods.clearOTP = function() {
+  this.otp = undefined;
+  this.otpExpires = undefined;
+  this.otpType = undefined;
 };
 
 export default mongoose.model('User', userSchema);

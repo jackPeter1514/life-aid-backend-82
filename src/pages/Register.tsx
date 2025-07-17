@@ -54,10 +54,16 @@ const Register = () => {
 
       if (response.ok) {
         toast({
-          title: "Registration Successful",
-          description: "Please login with your credentials",
+          title: "OTP Sent",
+          description: "Please check your email for the verification code",
         });
-        navigate('/login');
+        navigate('/verify-otp', { 
+          state: { 
+            userId: data.userId, 
+            email: data.email,
+            type: 'registration'
+          } 
+        });
       } else {
         toast({
           title: "Registration Failed",
@@ -146,7 +152,7 @@ const Register = () => {
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating Account..." : "Register"}
+                {loading ? "Sending OTP..." : "Continue to Verification"}
               </Button>
               <p className="text-sm text-muted-foreground text-center">
                 Already have an account?{" "}
